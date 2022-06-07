@@ -73,19 +73,29 @@ export interface IncludedAttributes {
     stop_sequence:         number;
 }
 
+// Schedule which substitutes in prediction data where possible
+interface DynamicSchedule {
+    id: string;
+    departureTime: string;
+    destination: string;
+    trainNum: string;
+    trackNum: string;
+    status: string;
+}
+
+
 
 // Component
 const DepartureBoard = (props: DepartureBoardProps) => {
-    const [schedules, setSchedules] = useState<Schedule[]>();
-    const [predictions, setPredictions] = useState<Included[]>();
+    const [dynamicSchedules, setDynamicSchedules] = useState<DynamicSchedule[]>();
 
     useEffect(() => {
 
-        async function fetchSchedulesAndPredictions() {
+        async function fetchDynamicSchedules() {
 
             // TODO: Make URL Dynamic
             const response: SchedulesResponse = await ky.get(
-                'https://api-v3.mbta.com/schedules?sort=departure_time&include=prediction&filter%5Bdate%5D=2022-06-07&filter%5Broute_type%5D=2&filter%5Bmin_time%5D=09%3A05&filter%5Bstop%5D=place-north'
+                'https://api-v3.mbta.com/schedules?sort=departure_time&include=prediction&filter%5Bdate%5D=2022-06-07&filter%5Broute_type%5D=2&filter%5Bmin_time%5D=11%3A10&filter%5Bstop%5D=place-north'
                 ).json();
 
             if (response) {
@@ -100,37 +110,84 @@ const DepartureBoard = (props: DepartureBoardProps) => {
                     return prediction.attributes.departure_time !== null;
                 });
 
-                console.log({schedules: filteredSchedules});
+                setDynamicSchedules(
+                    filteredSchedules.map((schedule) => {
+
+                        let timestring = new Date(schedule.attributes.departure_time!)
+                                            .toLocaleString('en-US', { 
+                                                    hour: 'numeric', 
+                                                    minute: 'numeric',
+                                                    hour12: true 
+                                                });
+
+                        // If the mapped schedule has a related prediction
+                        if (schedule.relationships.prediction!.data) {
+                            // Find the full prediction data from the "includes" property of the response
+                            const prediction = filteredPredictions.find((prediction) => {
+                                return prediction.id === schedule.relationships.prediction!.data!.id;
+                            });
+
+                            // Use the prediction's departure time
+                            if (prediction!.attributes.departure_time) {
+                                timestring = new Date(prediction!.attributes.departure_time!)
+                                                .toLocaleString('en-US', { 
+                                                    hour: 'numeric', 
+                                                    minute: 'numeric',
+                                                    hour12: true 
+                                                });
+                            }
+
+                            return {
+                                id: schedule.id,
+                                departureTime: timestring,
+                                destination: schedule.relationships.route.data ? schedule.relationships.route.data.id.split('-')[1] : '',
+                                trainNum: '',
+                                trackNum: prediction!.relationships.stop.data ? prediction!.relationships.stop.data.id.split('-')[2] : 'TBD',
+                                status: prediction!.attributes.status ? prediction!.attributes.status : 'On Time',
+                            }
+
+                        }
+
+
+                        return {
+                            id: schedule.id,
+                            departureTime: timestring,
+                            destination: schedule.relationships.route.data ? schedule.relationships.route.data.id.split('-')[1] : '',
+                            trainNum: '',
+                            trackNum: 'TBD',
+                            status: 'On Time',
+                        };
+                    })
+                );
+
+                
+                console.log({schedules: response.data});
+                console.log({filteredSchedules: filteredSchedules});
                 console.log({predictions: response.included});
                 console.log({filteredPredictions: filteredPredictions});
-
-                setSchedules(filteredSchedules);
-                setPredictions(filteredPredictions);
             }
         }
 
-        fetchSchedulesAndPredictions();
+        fetchDynamicSchedules();
         
-        // refresh the board every 60 seconds
+        // refresh the board every 30 seconds
         const interval = setInterval(() => {
-            fetchSchedulesAndPredictions();
-        }, 60000);
+            fetchDynamicSchedules();
+        }, 30000);
         return () => clearInterval(interval);
 
     }, [props.station]);
     
     let listings;
 
-    if (schedules) {
-        listings = schedules.map((schedule) => {
-            const timestring = new Date( schedule.attributes.departure_time! ).toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
-
+    if (dynamicSchedules) {
+        listings = dynamicSchedules.map((schedule) => {
             return <tr key={schedule.id}>
-                <td>{schedule.attributes.departure_time ? timestring : "null"}</td>
-                <td>{schedule.relationships.route.data?.id.split('-')[1]}</td>
-                <td>{}</td>                           {/* TODO: Add Vehicle # Determination */}
-                <td>TBD</td>                          {/* TODO: Add Track # Determination */}
-                <td>{}</td>
+                <td>{schedule.departureTime}</td>
+                <td>{schedule.destination}</td>
+                <td>{schedule.trainNum}</td>
+                <td>{schedule.trackNum}</td>
+                <td>{schedule.status}</td>
             </tr>
         });
     }
