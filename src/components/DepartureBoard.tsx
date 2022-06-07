@@ -1,9 +1,10 @@
 import ky from 'ky';
 import { useEffect, useState } from 'react';
-import { Table } from '@mantine/core';
+import { Center, Table } from '@mantine/core';
 
 interface DepartureBoardProps {
     station: string;
+    rows?: number;
 }
 
 // Interfaces for MBTA API
@@ -118,7 +119,7 @@ const DepartureBoard = (props: DepartureBoardProps) => {
                 });
 
                 setDynamicSchedules(
-                    filteredSchedules.map((schedule) => {
+                    filteredSchedules.slice(0, props.rows ? props.rows : 10).map((schedule) => {
 
                         // Timestring in HH:MM format
                         let timestring = new Date(schedule.attributes.departure_time!)
@@ -187,7 +188,7 @@ const DepartureBoard = (props: DepartureBoardProps) => {
         }, 30000);
         return () => clearInterval(interval);
 
-    }, [props.station]);
+    }, [props.station, props.rows]);
     
     let listings;
 

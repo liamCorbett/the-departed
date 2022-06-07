@@ -1,7 +1,16 @@
 import { Center, Header } from "@mantine/core"
+import { useEffect, useState } from "react";
 
 const PageHeader = () => {
-    const now = new Date();
+
+    const [now, setNow] = useState(new Date());
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setNow(new Date());
+        }, 10000);
+        return () => clearInterval(interval);
+    });
 
     return <Header height={80}>
         <Center>
