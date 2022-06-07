@@ -93,10 +93,18 @@ const DepartureBoard = (props: DepartureBoardProps) => {
 
         async function fetchDynamicSchedules() {
 
-            // TODO: Make URL Dynamic
-            const response: SchedulesResponse = await ky.get(
-                'https://api-v3.mbta.com/schedules?sort=departure_time&include=prediction&filter%5Bdate%5D=2022-06-07&filter%5Broute_type%5D=2&filter%5Bmin_time%5D=11%3A10&filter%5Bstop%5D=place-north'
-                ).json();
+            const now = new Date();
+            const todayIso = now.toISOString().substring(0,10);
+
+            const url = new URL('https://api-v3.mbta.com/schedules');
+            url.searchParams.append('sort', 'departure_time');
+            url.searchParams.append('include', 'prediction');
+            url.searchParams.append('filter[date]', todayIso);
+            url.searchParams.append('filter[route_type]', '2');
+            url.searchParams.append('filter[min_time]', now.getHours() + ":" + (now.getMinutes() - 5));
+            url.searchParams.append('filter[stop]', props.station);
+
+            const response: SchedulesResponse = await ky.get(url).json();
 
             if (response) {
 
@@ -113,6 +121,7 @@ const DepartureBoard = (props: DepartureBoardProps) => {
                 setDynamicSchedules(
                     filteredSchedules.map((schedule) => {
 
+                        // Timestring in HH:MM format
                         let timestring = new Date(schedule.attributes.departure_time!)
                                             .toLocaleString('en-US', { 
                                                     hour: 'numeric', 
@@ -141,7 +150,7 @@ const DepartureBoard = (props: DepartureBoardProps) => {
                                 id: schedule.id,
                                 departureTime: timestring,
                                 destination: schedule.relationships.route.data ? schedule.relationships.route.data.id.split('-')[1] : '',
-                                trainNum: '',
+                                trainNum: prediction!.relationships.vehicle!.data ? prediction!.relationships.vehicle!.data.id : '',
                                 trackNum: prediction!.relationships.stop.data ? prediction!.relationships.stop.data.id.split('-')[2] : 'TBD',
                                 status: prediction!.attributes.status ? prediction!.attributes.status : 'On Time',
                             }
@@ -160,11 +169,13 @@ const DepartureBoard = (props: DepartureBoardProps) => {
                     })
                 );
 
+
                 
                 console.log({schedules: response.data});
                 console.log({filteredSchedules: filteredSchedules});
                 console.log({predictions: response.included});
                 console.log({filteredPredictions: filteredPredictions});
+                console.log(now.getHours() + ":" + now.getMinutes() + ':' + now.getSeconds());
             }
         }
 

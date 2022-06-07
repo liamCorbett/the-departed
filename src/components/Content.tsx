@@ -4,7 +4,7 @@ import DepartureBoard from './DepartureBoard'
 const Content = () => {
     return <>
         <Container>
-            <DepartureBoard station={"North Station"}/>
+            <DepartureBoard station={'place-north'}/>
         </Container>
     </>
 }
