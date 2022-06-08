@@ -33,10 +33,10 @@ const makeDynamic = (schedules: Schedule[], predictions: Included[]): DynamicSch
             return {
                 id: schedule.id,
                 departureTime: timestring,
-                destination: schedule.relationships.route.data ? schedule.relationships.route.data.id.split('-')[1] : '',
-                trainNum: prediction!.relationships.vehicle!.data ? prediction!.relationships.vehicle!.data.id : '',
+                destination: schedule.relationships.route.data ? schedule.relationships.route.data.id.split('-')[1].trim() : null,
+                trainNum: prediction!.relationships.vehicle!.data ? prediction!.relationships.vehicle!.data.id : null,
                 trackNum: prediction!.relationships.stop.data ? prediction!.relationships.stop.data.id.split('-')[2] : 'TBD',
-                status: prediction!.attributes.status ? prediction!.attributes.status : 'On Time',
+                status: prediction!.attributes.status ? prediction!.attributes.status.trim() : 'On Time',
             }
     
         }
@@ -45,8 +45,8 @@ const makeDynamic = (schedules: Schedule[], predictions: Included[]): DynamicSch
         return {
             id: schedule.id,
             departureTime: timestring,
-            destination: schedule.relationships.route.data ? schedule.relationships.route.data.id.split('-')[1] : '',
-            trainNum: '',
+            destination: schedule.relationships.route.data ? schedule.relationships.route.data.id.split('-')[1] : null,
+            trainNum: null,
             trackNum: 'TBD',
             status: 'On Time',  // TODO: if MBTA doesn't issue a prediction for a schedule, "On time" can be inaccurate
         };

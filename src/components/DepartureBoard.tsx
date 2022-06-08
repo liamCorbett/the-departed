@@ -80,8 +80,8 @@ export interface IncludedAttributes {
 export interface DynamicSchedule {
     id: string;
     departureTime: string;
-    destination: string;
-    trainNum: string;
+    destination: string | null;
+    trainNum: string | null;
     trackNum: string;
     status: string;
 }
@@ -142,7 +142,7 @@ const DepartureBoard = (props: DepartureBoardProps) => {
             return <tr key={schedule.id}>
                 <td>{schedule.departureTime}</td>
                 <td>{schedule.destination}</td>
-                <td>{schedule.trainNum}</td>             {/* Can't seem to find train number unless a prediction is present */}
+                <td>{schedule.trainNum}</td>{/* Can't seem to find train number unless a prediction is present */}
                 <td>{schedule.trackNum}</td>
                 <td>{schedule.status}</td>
             </tr>
@@ -160,7 +160,7 @@ const DepartureBoard = (props: DepartureBoardProps) => {
             ]}
             onChange={setStation}
         />
-        <Table>
+        <Table highlightOnHover>
             <thead>
                 <tr>
                     <th>Time</th>
