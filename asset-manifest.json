@@ -1,0 +1,12 @@
+{
+  "files": {
+    "main.js": "/the-departed/static/js/main.b192ab62.js",
+    "static/js/787.061ff11a.chunk.js": "/the-departed/static/js/787.061ff11a.chunk.js",
+    "index.html": "/the-departed/index.html",
+    "main.b192ab62.js.map": "/the-departed/static/js/main.b192ab62.js.map",
+    "787.061ff11a.chunk.js.map": "/the-departed/static/js/787.061ff11a.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/js/main.b192ab62.js"
+  ]
+}
