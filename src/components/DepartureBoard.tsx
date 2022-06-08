@@ -1,7 +1,7 @@
 import ky from 'ky';
 import { useEffect, useState } from 'react';
 import { Select, Table } from '@mantine/core';
-import makeDynamic from '../core/makedynamic';
+import makeDynamic from '../core/makeDynamic';
 
 interface DepartureBoardProps {
     station: string;
@@ -88,12 +88,10 @@ export interface DynamicSchedule {
 
 const DepartureBoard = (props: DepartureBoardProps) => {
     const [dynamicSchedules, setDynamicSchedules] = useState<DynamicSchedule[]>();
-    const [station, setStation] = useState<string|null>('place-north');
+    const [station, setStation] = useState<string|null>(props.station);
 
     useEffect(() => {
-
-        async function fetchDynamicSchedules() {
-
+        async function updateDynamicSchedules() {
             if (!station) return;
 
             const now = new Date();
@@ -111,7 +109,6 @@ const DepartureBoard = (props: DepartureBoardProps) => {
             const response: SchedulesResponse = await ky.get(url).json();
 
             if (response) {
-
                 // Remove schedules with null departure times
                 const filteredSchedules = response.data.filter((schedule) => {
                     return schedule.attributes.departure_time !== null;
@@ -126,23 +123,16 @@ const DepartureBoard = (props: DepartureBoardProps) => {
                 }
 
                 setDynamicSchedules(makeDynamic(filteredSchedules, filteredPredictions));
-                
-                console.log({schedules: response.data});
-                console.log({filteredSchedules: filteredSchedules});
-                console.log({predictions: response.included});
-                console.log({filteredPredictions: filteredPredictions});
-                console.log(now.getHours() + ":" + now.getMinutes() + ':' + now.getSeconds());
             }
         }
 
-        fetchDynamicSchedules();
+        updateDynamicSchedules();
         
         // refresh the board every 30 seconds
         const interval = setInterval(() => {
-            fetchDynamicSchedules();
+            updateDynamicSchedules();
         }, 30000);
         return () => clearInterval(interval);
-
     }, [station, props.rows]);
     
     let listings;
@@ -152,7 +142,7 @@ const DepartureBoard = (props: DepartureBoardProps) => {
             return <tr key={schedule.id}>
                 <td>{schedule.departureTime}</td>
                 <td>{schedule.destination}</td>
-                <td>{schedule.trainNum}</td>
+                <td>{schedule.trainNum}</td>             {/* Can't seem to find train number unless a prediction is present */}
                 <td>{schedule.trackNum}</td>
                 <td>{schedule.status}</td>
             </tr>

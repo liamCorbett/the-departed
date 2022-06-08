@@ -48,7 +48,7 @@ const makeDynamic = (schedules: Schedule[], predictions: Included[]): DynamicSch
             destination: schedule.relationships.route.data ? schedule.relationships.route.data.id.split('-')[1] : '',
             trainNum: '',
             trackNum: 'TBD',
-            status: 'On Time',
+            status: 'On Time',  // TODO: if MBTA doesn't issue a prediction for a schedule, "On time" can be inaccurate
         };
     })
 
