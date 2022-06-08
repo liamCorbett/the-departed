@@ -1,6 +1,6 @@
 import ky from 'ky';
 import { useEffect, useState } from 'react';
-import { Center, Table } from '@mantine/core';
+import { Select, Table } from '@mantine/core';
 
 interface DepartureBoardProps {
     station: string;
@@ -87,10 +87,13 @@ interface DynamicSchedule {
 
 const DepartureBoard = (props: DepartureBoardProps) => {
     const [dynamicSchedules, setDynamicSchedules] = useState<DynamicSchedule[]>();
+    const [station, setStation] = useState<string|null>('place-north');
 
     useEffect(() => {
 
         async function fetchDynamicSchedules() {
+
+            if (!station) return;
 
             const now = new Date();
             const fiveMinutesAgo = new Date();
@@ -102,7 +105,7 @@ const DepartureBoard = (props: DepartureBoardProps) => {
             url.searchParams.append('filter[date]', now.toISOString().substring(0,10));
             url.searchParams.append('filter[route_type]', '2');
             url.searchParams.append('filter[min_time]', fiveMinutesAgo.toLocaleString('en-US', {hour12: false, hour: '2-digit', minute: '2-digit'}));
-            url.searchParams.append('filter[stop]', props.station);
+            url.searchParams.append('filter[stop]', station);
 
             const response: SchedulesResponse = await ky.get(url).json();
 
@@ -191,7 +194,7 @@ const DepartureBoard = (props: DepartureBoardProps) => {
         }, 30000);
         return () => clearInterval(interval);
 
-    }, [props.station, props.rows]);
+    }, [station, props.rows]);
     
     let listings;
 
@@ -207,20 +210,32 @@ const DepartureBoard = (props: DepartureBoardProps) => {
         });
     }
 
-    return <Table>
-        <thead>
-            <tr>
-                <th>Time</th>
-                <th>Destination</th>
-                <th>Train #</th>
-                <th>Track #</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            {listings}
-        </tbody>
-    </Table>
+    return <>    
+        <Select
+            label='Station'
+            placeholder='station name'
+            value={station}
+            data={[
+                { value: 'place-north', label: 'North Station'},
+                { value: 'place-sstat', label: 'South Station'}
+            ]}
+            onChange={setStation}
+        />
+        <Table>
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Destination</th>
+                    <th>Train #</th>
+                    <th>Track #</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {listings}
+            </tbody>
+        </Table>
+    </>
 };
 
 export default DepartureBoard;
