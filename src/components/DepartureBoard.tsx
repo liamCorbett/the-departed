@@ -10,7 +10,7 @@ interface DepartureBoardProps {
 // Interfaces for MBTA API
 export interface SchedulesResponse {
     data:     Schedule[];
-    included: Included[];
+    included?: Included[];
     jsonapi:  {version: string;};
 }
 
@@ -114,9 +114,12 @@ const DepartureBoard = (props: DepartureBoardProps) => {
                 });
 
                 // Remove predictions with null departure times
-                const filteredPredictions = response.included.filter((prediction) => {
-                    return prediction.attributes.departure_time !== null;
-                });
+                let filteredPredictions: Included[] = [];
+                if (response.included) {
+                    filteredPredictions = response.included.filter((prediction) => {
+                        return prediction.attributes.departure_time !== null;
+                    });
+                }
 
                 setDynamicSchedules(
                     filteredSchedules.slice(0, props.rows ? props.rows : 10).map((schedule) => {
