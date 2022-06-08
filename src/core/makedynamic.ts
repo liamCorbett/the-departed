@@ -4,13 +4,15 @@ const makeDynamic = (schedules: Schedule[], predictions: Included[]): DynamicSch
 
     return schedules.map((schedule) => {
 
+        let departureTime = new Date(schedule.attributes.departure_time!);
+        let now = new Date();
+
         // Timestring in HH:MM format
-        let timestring = new Date(schedule.attributes.departure_time!)
-                            .toLocaleString('en-US', { 
-                                    hour: 'numeric', 
-                                    minute: 'numeric',
-                                    hour12: true 
-                                });
+        let timestring = departureTime.toLocaleString('en-US', { 
+                                                hour: 'numeric', 
+                                                minute: 'numeric',
+                                                hour12: true 
+                                            });
     
         // If the mapped schedule has a related prediction
         if (schedule.relationships.prediction!.data) {
@@ -48,7 +50,10 @@ const makeDynamic = (schedules: Schedule[], predictions: Included[]): DynamicSch
             destination: schedule.relationships.route.data ? schedule.relationships.route.data.id.split('-')[1] : null,
             trainNum: null,
             trackNum: 'TBD',
-            status: 'On Time',  // TODO: if MBTA doesn't issue a prediction for a schedule, "On time" can be inaccurate
+            status: (now >= departureTime) ? null : 'On Time', 
+            // Unsure of why MBTA doesn't always issue predictions for boarding trains,
+            // but a null status probably makes more sense than an 'On Time' status for
+            // a departure time that's already passed.
         };
     })
 

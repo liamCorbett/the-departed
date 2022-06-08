@@ -83,7 +83,7 @@ export interface DynamicSchedule {
     destination: string | null;
     trainNum: string | null;
     trackNum: string;
-    status: string;
+    status: string | null;
 }
 
 const DepartureBoard = (props: DepartureBoardProps) => {
